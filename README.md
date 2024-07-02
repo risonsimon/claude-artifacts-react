@@ -38,7 +38,7 @@ If you prefer to set up the project manually:
 1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/claude-artifacts-react.git
+   git clone https://github.com/risonsimon/claude-artifacts-react.git
    cd claude-artifacts-react
    ```
 
