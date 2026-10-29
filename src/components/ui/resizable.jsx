@@ -23,28 +23,47 @@ const ResizablePanelGroup = ({
   onLayoutChange,
   ref,
   groupRef,
+  elementRef,
   ...props
 }) => {
   const resolved = orientation ?? direction ?? "horizontal"
   const innerRef = React.useRef(null)
+  const elementInnerRef = React.useRef(null)
   React.useImperativeHandle(groupRef, () => innerRef.current, [])
+  React.useImperativeHandle(elementRef, () => elementInnerRef.current, [])
+
+  // Layouts are keyed by panel id, and object key order is not panel order
+  // (numeric-looking ids sort first), so read the order from the DOM.
+  const panelIds = React.useCallback((layout) => {
+    const group = elementInnerRef.current
+    const ids = group
+      ? [...group.querySelectorAll("[data-panel]")]
+          .filter((el) => el.closest("[data-group]") === group)
+          .map((el) => el.id)
+          .filter((id) => id in layout)
+      : []
+    return ids.length === Object.keys(layout).length ? ids : Object.keys(layout)
+  }, [])
+  const toArray = React.useCallback((layout) => panelIds(layout).map((id) => layout[id]), [panelIds])
+
   React.useImperativeHandle(ref, () => ({
     getId: () => props.id,
-    getLayout: () => Object.values(innerRef.current?.getLayout() ?? {}),
+    getLayout: () => toArray(innerRef.current?.getLayout() ?? {}),
     setLayout: (sizes) => {
-      const ids = Object.keys(innerRef.current?.getLayout() ?? {})
+      const ids = panelIds(innerRef.current?.getLayout() ?? {})
       innerRef.current?.setLayout(Object.fromEntries(ids.map((id, index) => [id, sizes[index]])))
     },
-  }), [props.id])
+  }), [props.id, panelIds, toArray])
   return (
     <OrientationContext.Provider value={resolved}>
       <ResizablePrimitive.Group
         groupRef={innerRef}
+        elementRef={elementInnerRef}
         orientation={resolved}
         data-panel-group-direction={resolved}
         onLayoutChange={(layout) => {
           onLayoutChange?.(layout)
-          onLayout?.(Object.values(layout))
+          onLayout?.(toArray(layout))
         }}
         className={cn("flex h-full w-full", resolved === "vertical" && "flex-col", className)}
         {...props} />

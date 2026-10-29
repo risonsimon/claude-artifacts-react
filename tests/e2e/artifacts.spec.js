@@ -66,6 +66,11 @@ test("shadcn components work from the @/components/ui barrel", async ({ page }) 
   await page.getByRole("button", { name: "Resize left" }).click();
   await page.getByRole("button", { name: "Read refs" }).click();
   await expect(page.getByTestId("ref-info")).toHaveText("50|50,50");
+  // The panel ids are "2" then "1", so object key order would reverse these.
+  await page.getByRole("button", { name: "Set layout" }).click();
+  await page.getByRole("button", { name: "Read refs" }).click();
+  await expect(page.getByTestId("ref-info")).toHaveText("25|25,75");
+  await expect(page.getByTestId("sizes")).toHaveText("25,75");
   expect(errors).toEqual([]);
 });
 

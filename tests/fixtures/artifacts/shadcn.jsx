@@ -52,12 +52,13 @@ export default function Shadcn() {
       <p data-testid="selected-date">{date ? date.toDateString() : "none"}</p>
       <div style={{ width: 400, height: 120 }}>
         <ResizablePanelGroup ref={groupRef} direction="horizontal" onLayout={setSizes} className="rounded border">
-          <ResizablePanel ref={leftRef} defaultSize={30} collapsible><div className="p-2">Left</div></ResizablePanel>
+          <ResizablePanel id="2" ref={leftRef} defaultSize={30} collapsible><div className="p-2">Left</div></ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70}><div className="p-2">Right</div></ResizablePanel>
+          <ResizablePanel id="1" defaultSize={70}><div className="p-2">Right</div></ResizablePanel>
         </ResizablePanelGroup>
       </div>
       <Button onClick={() => leftRef.current.resize(50)}>Resize left</Button>
+      <Button onClick={() => groupRef.current.setLayout([25, 75])}>Set layout</Button>
       <Button
         onClick={() =>
           setRefInfo(`${Math.round(leftRef.current.getSize())}|${groupRef.current.getLayout().map(Math.round).join(",")}`)
