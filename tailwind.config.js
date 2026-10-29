@@ -1,11 +1,25 @@
+import animate from "tailwindcss-animate";
+
+const artifactsDir = process.env.ARTIFACTS_DIR;
+
+const colors =
+  "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{js,jsx}',
-    './components/**/*.{js,jsx}',
-    './app/**/*.{js,jsx}',
-    './src/**/*.{js,jsx}',
+    "./index.html",
+    "./src/**/*.{js,jsx,ts,tsx}",
+    ...(artifactsDir ? [`${artifactsDir}/**/*.{js,jsx,ts,tsx}`] : []),
+  ],
+  // Claude renders artifacts against a prebuilt Tailwind stylesheet, so class
+  // names built at runtime (`bg-${color}-500`) work there. The JIT compiler
+  // here only sees literal class names, so keep the common color utilities.
+  safelist: [
+    {
+      pattern: new RegExp(`^(bg|text|border)-(${colors})-(50|100|200|300|400|500|600|700|800|900|950)$`),
+    },
   ],
   prefix: "",
   theme: {
@@ -73,5 +87,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-}
+  plugins: [animate],
+};
