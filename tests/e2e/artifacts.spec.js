@@ -58,9 +58,14 @@ test("shadcn components work from the @/components/ui barrel", async ({ page }) 
 
   // Claude passes percentages as plain numbers; v4 of the library would read them as pixels.
   await expect(page.getByTestId("sizes")).toHaveText("30,70");
-  const left = await page.getByText("Left").evaluate((el) => el.closest("[data-panel]").getBoundingClientRect().width);
+  const left = await page.getByText("Left", { exact: true }).evaluate((el) => el.closest("[data-panel]").getBoundingClientRect().width);
   expect(left).toBeGreaterThan(100);
   expect(left).toBeLessThan(140);
+
+  // Refs keep the version 2 imperative API, which works in percentages.
+  await page.getByRole("button", { name: "Resize left" }).click();
+  await page.getByRole("button", { name: "Read refs" }).click();
+  await expect(page.getByTestId("ref-info")).toHaveText("50|50,50");
   expect(errors).toEqual([]);
 });
 
@@ -129,6 +134,8 @@ test("HTML artifacts render in standards mode with the artifact APIs", async ({ 
   await expect(frame.locator("#title")).toHaveText("HTML artifact");
   await expect(frame.locator("#apis")).toHaveText("CSS1Compat,object,object,object,ok");
   await expect(page).toHaveTitle("HTML fixture");
+  // A URL object made in the iframe still goes to the proxy, which asks for the password.
+  await expect(frame.locator("#proxy")).toHaveText("401");
 });
 
 test("a crashing artifact shows a helpful error", async ({ page }) => {

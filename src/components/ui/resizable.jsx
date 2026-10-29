@@ -13,18 +13,33 @@ function asPercent(value) {
   return typeof value === "number" ? `${value}%` : value
 }
 
+// `ref` gets the version 2 imperative API (percentage arrays and numbers) so
+// Claude's code that calls getLayout(), setLayout(), resize() or collapse() still works.
 const ResizablePanelGroup = ({
   className,
   direction,
   orientation,
   onLayout,
   onLayoutChange,
+  ref,
+  groupRef,
   ...props
 }) => {
   const resolved = orientation ?? direction ?? "horizontal"
+  const innerRef = React.useRef(null)
+  React.useImperativeHandle(groupRef, () => innerRef.current, [])
+  React.useImperativeHandle(ref, () => ({
+    getId: () => props.id,
+    getLayout: () => Object.values(innerRef.current?.getLayout() ?? {}),
+    setLayout: (sizes) => {
+      const ids = Object.keys(innerRef.current?.getLayout() ?? {})
+      innerRef.current?.setLayout(Object.fromEntries(ids.map((id, index) => [id, sizes[index]])))
+    },
+  }), [props.id])
   return (
     <OrientationContext.Provider value={resolved}>
       <ResizablePrimitive.Group
+        groupRef={innerRef}
         orientation={resolved}
         data-panel-group-direction={resolved}
         onLayoutChange={(layout) => {
@@ -37,15 +52,32 @@ const ResizablePanelGroup = ({
   )
 }
 
-const ResizablePanel = ({ defaultSize, minSize, maxSize, collapsedSize, onResize, ...props }) => (
-  <ResizablePrimitive.Panel
-    defaultSize={asPercent(defaultSize)}
-    minSize={asPercent(minSize)}
-    maxSize={asPercent(maxSize)}
-    collapsedSize={asPercent(collapsedSize)}
-    onResize={onResize ? (size, id, prev) => onResize(size.asPercentage, prev?.asPercentage, id) : undefined}
-    {...props} />
-)
+const ResizablePanel = ({ defaultSize, minSize, maxSize, collapsedSize, onResize, ref, panelRef, id, ...props }) => {
+  const autoId = React.useId()
+  const panelId = id ?? autoId
+  const innerRef = React.useRef(null)
+  React.useImperativeHandle(panelRef, () => innerRef.current, [])
+  React.useImperativeHandle(ref, () => ({
+    collapse: () => innerRef.current?.collapse(),
+    expand: () => innerRef.current?.expand(),
+    getId: () => String(panelId),
+    getSize: () => innerRef.current?.getSize().asPercentage ?? 0,
+    isCollapsed: () => innerRef.current?.isCollapsed() ?? false,
+    isExpanded: () => !(innerRef.current?.isCollapsed() ?? false),
+    resize: (size) => innerRef.current?.resize(asPercent(size)),
+  }), [panelId])
+  return (
+    <ResizablePrimitive.Panel
+      id={panelId}
+      panelRef={innerRef}
+      defaultSize={asPercent(defaultSize)}
+      minSize={asPercent(minSize)}
+      maxSize={asPercent(maxSize)}
+      collapsedSize={asPercent(collapsedSize)}
+      onResize={onResize ? (size, id, prev) => onResize(size.asPercentage, prev?.asPercentage, id) : undefined}
+      {...props} />
+  )
+}
 
 const ResizableHandle = ({
   withHandle,

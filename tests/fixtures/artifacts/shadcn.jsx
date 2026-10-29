@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
   Alert, AlertDescription, AlertTitle,
@@ -15,6 +15,9 @@ import {
 export default function Shadcn() {
   const [date, setDate] = useState(new Date(2025, 0, 15));
   const [sizes, setSizes] = useState([]);
+  const [refInfo, setRefInfo] = useState("");
+  const groupRef = useRef(null);
+  const leftRef = useRef(null);
   return (
     <div className="space-y-4 p-4">
       <Card>
@@ -48,12 +51,21 @@ export default function Shadcn() {
       <Calendar mode="single" selected={date} onSelect={setDate} defaultMonth={new Date(2025, 0, 1)} initialFocus />
       <p data-testid="selected-date">{date ? date.toDateString() : "none"}</p>
       <div style={{ width: 400, height: 120 }}>
-        <ResizablePanelGroup direction="horizontal" onLayout={setSizes} className="rounded border">
-          <ResizablePanel defaultSize={30}><div className="p-2">Left</div></ResizablePanel>
+        <ResizablePanelGroup ref={groupRef} direction="horizontal" onLayout={setSizes} className="rounded border">
+          <ResizablePanel ref={leftRef} defaultSize={30} collapsible><div className="p-2">Left</div></ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70}><div className="p-2">Right</div></ResizablePanel>
         </ResizablePanelGroup>
       </div>
+      <Button onClick={() => leftRef.current.resize(50)}>Resize left</Button>
+      <Button
+        onClick={() =>
+          setRefInfo(`${Math.round(leftRef.current.getSize())}|${groupRef.current.getLayout().map(Math.round).join(",")}`)
+        }
+      >
+        Read refs
+      </Button>
+      <p data-testid="ref-info">{refInfo}</p>
       <p data-testid="sizes">{sizes.map((size) => Math.round(size)).join(",")}</p>
       <Toaster />
       <SonnerToaster />
