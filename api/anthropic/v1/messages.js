@@ -1,10 +1,8 @@
-// Vercel Function: POST /api/anthropic/v1/messages
+// Vercel Function: /api/anthropic/v1/messages
 import { handleAnthropicProxy } from "../../../server/anthropic-proxy.js";
 
-export function POST(request) {
-  return handleAnthropicProxy(request, process.env);
-}
+// Vercel sets x-real-ip to the visitor's address and overwrites any value the client sends.
+const handle = (request) =>
+  handleAnthropicProxy(request, process.env, { clientIp: request.headers.get("x-real-ip") });
 
-export function GET(request) {
-  return handleAnthropicProxy(request, process.env);
-}
+export { handle as GET, handle as OPTIONS, handle as POST };

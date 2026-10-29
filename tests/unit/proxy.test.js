@@ -118,13 +118,44 @@ describe("handleAnthropicProxy", () => {
 
   it("rate limits each visitor", async () => {
     const limited = { ...env, RATE_LIMIT_PER_MINUTE: "2" };
-    const from = (ip) => request(undefined, { headers: { "x-forwarded-for": `${ip}, 10.0.0.1` } });
-    expect((await handleAnthropicProxy(from("1.1.1.1"), limited)).status).toBe(200);
-    expect((await handleAnthropicProxy(from("1.1.1.1"), limited)).status).toBe(200);
-    const third = await handleAnthropicProxy(from("1.1.1.1"), limited);
+    const send = (clientIp, forged) =>
+      handleAnthropicProxy(request(undefined, { headers: { "cf-connecting-ip": forged, "x-forwarded-for": forged } }), limited, {
+        clientIp,
+      });
+    expect((await send("1.1.1.1", "9.9.9.1")).status).toBe(200);
+    expect((await send("1.1.1.1", "9.9.9.2")).status).toBe(200);
+    const third = await send("1.1.1.1", "9.9.9.3");
     expect(third.status).toBe(429);
     expect(third.headers.get("retry-after")).toBe("60");
-    expect((await handleAnthropicProxy(from("2.2.2.2"), limited)).status).toBe(200);
+    expect((await send("2.2.2.2", "9.9.9.3")).status).toBe(200);
+  });
+
+  it("answers CORS preflights and adds CORS headers only for ALLOWED_ORIGINS", async () => {
+    const shared = { ...env, ALLOWED_ORIGINS: "https://friend.example" };
+    const preflight = (origin) =>
+      handleAnthropicProxy(request(undefined, { method: "OPTIONS", headers: { origin } }), shared);
+
+    const ok = await preflight("https://friend.example");
+    expect(ok.status).toBe(204);
+    expect(ok.headers.get("access-control-allow-origin")).toBe("https://friend.example");
+    expect(ok.headers.get("access-control-allow-headers")).toContain("x-artifact-password");
+    expect((await preflight("https://evil.example")).status).toBe(403);
+    expect((await preflight("https://evil.example")).headers.get("access-control-allow-origin")).toBeNull();
+
+    const post = await handleAnthropicProxy(request(undefined, { headers: { origin: "https://friend.example" } }), shared);
+    expect(post.status).toBe(200);
+    expect(post.headers.get("access-control-allow-origin")).toBe("https://friend.example");
+    expect(post.headers.get("access-control-expose-headers")).toContain("x-artifact-auth");
+
+    const locked = await handleAnthropicProxy(request(undefined, { headers: { origin: "https://friend.example" } }), {
+      ...shared,
+      ARTIFACT_PASSWORD: "pw",
+    });
+    expect(locked.status).toBe(401);
+    expect(locked.headers.get("access-control-allow-origin")).toBe("https://friend.example");
+
+    const sameSite = await handleAnthropicProxy(request(undefined, { headers: { origin: "https://my-app.example" } }), shared);
+    expect(sameSite.headers.get("access-control-allow-origin")).toBeNull();
   });
 
   it("turns the rate limit off with 0", async () => {

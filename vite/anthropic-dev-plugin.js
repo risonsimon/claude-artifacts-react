@@ -25,8 +25,9 @@ function middleware(getEnv) {
         body,
       });
 
-      // Dev servers are often reached through tunnels that rewrite the Host header.
-      const response = await handleAnthropicProxy(request, getEnv(), { checkOrigin: false });
+      // Tunnels that rewrite Host usually send x-forwarded-host, which the origin check accepts.
+      // For any other setup, list the site in ALLOWED_ORIGINS.
+      const response = await handleAnthropicProxy(request, getEnv(), { clientIp: req.socket.remoteAddress });
 
       res.statusCode = response.status;
       response.headers.forEach((value, name) => res.setHeader(name, value));

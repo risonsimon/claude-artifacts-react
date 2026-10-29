@@ -153,7 +153,7 @@ pnpm dev
 
 Open http://localhost:5173. Changes to your artifact files show up right away.
 
-To use the Anthropic API locally, copy `.env.local.example` to `.env.local` and fill in `ANTHROPIC_API_KEY`. `pnpm dev` and `pnpm preview` both run the proxy.
+To use the Anthropic API locally, copy `.env.local.example` to `.env.local` and fill in `ANTHROPIC_API_KEY`. `pnpm dev` and `pnpm preview` both run the proxy. If you open the dev server through a tunnel and AI calls return 403, add the tunnel's address to `ALLOWED_ORIGINS` in `.env.local`.
 
 | Command | What it does |
 | --- | --- |

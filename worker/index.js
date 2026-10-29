@@ -5,7 +5,7 @@ export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     if (pathname === PROXY_PREFIX || pathname.startsWith(PROXY_PREFIX + "/")) {
-      return handleAnthropicProxy(request, env);
+      return handleAnthropicProxy(request, env, { clientIp: request.headers.get("cf-connecting-ip") });
     }
     if (pathname.startsWith("/api/")) {
       return Response.json({ type: "error", error: { type: "not_found_error", message: "Not found." } }, { status: 404 });

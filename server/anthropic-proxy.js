@@ -48,15 +48,6 @@ function safeEqual(a, b) {
   return diff === 0;
 }
 
-function visitorId(request) {
-  const headers = request.headers;
-  return (
-    headers.get("cf-connecting-ip") ||
-    headers.get("x-real-ip") ||
-    headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "unknown"
-  );
-}
 
 // Per-instance memory only: serverless platforms run several instances, so this
 // slows down abuse rather than enforcing an exact global limit.
@@ -85,14 +76,17 @@ function readNumber(value) {
   return Number.isFinite(number) ? number : undefined;
 }
 
-function isAllowedOrigin(request, url, env) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  const allowed = String(env.ALLOWED_ORIGINS || "")
+function extraOrigins(env) {
+  return String(env.ALLOWED_ORIGINS || "")
     .split(",")
     .map((value) => value.trim().replace(/\/+$/, ""))
     .filter(Boolean);
-  if (allowed.includes(origin)) return true;
+}
+
+function isAllowedOrigin(request, url, env) {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  if (extraOrigins(env).includes(origin)) return true;
   let originHost;
   try {
     originHost = new URL(origin).host;
@@ -103,17 +97,50 @@ function isAllowedOrigin(request, url, env) {
   return hosts.includes(originHost);
 }
 
+// Only origins listed in ALLOWED_ORIGINS need CORS headers; the site itself is same-origin.
+function corsHeaders(request, env) {
+  const origin = request.headers.get("origin");
+  if (!origin || !extraOrigins(env).includes(origin)) return null;
+  return {
+    "access-control-allow-origin": origin,
+    "access-control-expose-headers": "x-artifact-auth, request-id, retry-after",
+    vary: "Origin",
+  };
+}
+
 /**
  * @param {Request} request
  * @param {Record<string, string | undefined>} env
- * @param {{ checkOrigin?: boolean }} [options]
+ * @param {{ checkOrigin?: boolean, clientIp?: string | null }} [options]
+ *   clientIp should come from a source the platform guarantees (for example
+ *   cf-connecting-ip on Cloudflare); client-supplied headers can be forged.
  */
-export async function handleAnthropicProxy(request, env = {}, { checkOrigin = true } = {}) {
+export async function handleAnthropicProxy(request, env = {}, options = {}) {
+  const response = await proxy(request, env, options);
+  const cors = corsHeaders(request, env);
+  if (!cors) return response;
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(cors)) headers.set(name, value);
+  return new Response(response.body, { status: response.status, headers });
+}
+
+async function proxy(request, env, { checkOrigin = true, clientIp } = {}) {
   const url = new URL(request.url);
   const path = url.pathname.startsWith(PROXY_PREFIX) ? url.pathname.slice(PROXY_PREFIX.length) : url.pathname;
 
   if (!ALLOWED_PATHS.has(path)) {
     return jsonError(404, "not_found_error", `Only POST ${PROXY_PREFIX}/v1/messages is available.`);
+  }
+  if (request.method === "OPTIONS") {
+    if (!corsHeaders(request, env)) return new Response(null, { status: 403 });
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "access-control-allow-methods": "POST",
+        "access-control-allow-headers": "content-type, anthropic-version, anthropic-beta, x-artifact-password",
+        "access-control-max-age": "600",
+      },
+    });
   }
   if (request.method !== "POST") {
     return jsonError(405, "invalid_request_error", "Use POST.", { allow: "POST" });
@@ -146,7 +173,7 @@ export async function handleAnthropicProxy(request, env = {}, { checkOrigin = tr
   }
 
   const limit = readNumber(env.RATE_LIMIT_PER_MINUTE) ?? DEFAULT_RATE_LIMIT;
-  if (limit > 0 && isRateLimited(visitorId(request), limit)) {
+  if (limit > 0 && isRateLimited(clientIp || "unknown", limit)) {
     return jsonError(429, "rate_limit_error", `Too many requests. The limit is ${limit} per minute.`, {
       "retry-after": "60",
     });
