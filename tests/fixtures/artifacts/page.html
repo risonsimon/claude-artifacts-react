@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>HTML fixture</title>
+</head>
+<body>
+  <h1 id="title">HTML artifact</h1>
+  <p id="apis"></p>
+  <script>
+    localStorage.setItem("html-fixture", "ok");
+    document.getElementById("apis").textContent = [
+      document.compatMode,
+      typeof window.storage,
+      typeof window.claude,
+      typeof window.fs,
+      localStorage.getItem("html-fixture"),
+    ].join(",");
+  </script>
+</body>
+</html>
