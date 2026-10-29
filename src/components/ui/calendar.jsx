@@ -31,7 +31,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       autoFocus={autoFocus ?? initialFocus}
-      className={cn("p-3", className)}
+      className={cn("p-3 w-fit", className)}
       classNames={{
         months: "relative flex flex-col sm:flex-row gap-4",
         month: "space-y-4",
