@@ -27,13 +27,14 @@ dist-ssr
 dist-single
 .wrangler
 .vercel
+dist-e2e
 playwright-report
 test-results
 
 # Local secrets
 .env
 .env.*
-!.env.example
+!.env.local.example
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
