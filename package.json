@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "cf:dev": "vite build && wrangler dev",
-    "deploy": "vite build && wrangler deploy"
+    "cf:deploy": "vite build && wrangler deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
