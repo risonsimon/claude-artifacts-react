@@ -51,6 +51,15 @@ describe("window.storage shim", () => {
     expect((await storage.get("key")).value).toBe("main value");
   });
 
+  it("keeps the root artifact apart from one named main", async () => {
+    setStorageNamespace("");
+    await storage.set("key", "root value");
+    setStorageNamespace("main");
+    await storage.set("key", "main value");
+    setStorageNamespace("");
+    expect((await storage.get("key")).value).toBe("root value");
+  });
+
   it("rejects keys Claude rejects", async () => {
     for (const key of ["", "has space", "a/b", "a\\b", "it's", 'say"hi"', "x".repeat(200)]) {
       await expect(storage.set(key, "v")).rejects.toThrow();

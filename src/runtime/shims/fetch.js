@@ -6,10 +6,12 @@ export const PROXY_PATH = "/api/anthropic";
 const PASSWORD_KEY = "claude-artifacts:password";
 const MARKER = Symbol.for("claude-artifacts.fetch");
 
+// No instanceof checks: HTML artifacts call this from an iframe, whose URL and
+// Request objects come from a different realm than this module.
 function requestUrl(input) {
   if (typeof input === "string") return input;
-  if (input instanceof URL) return input.href;
-  return input?.url;
+  if (typeof input?.url === "string") return input.url;
+  return input == null ? input : String(input);
 }
 
 export function toProxyUrl(url, base = "/") {

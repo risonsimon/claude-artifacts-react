@@ -37,6 +37,16 @@ describe("fetch shim", () => {
     expect(calls[0].init.headers.get("anthropic-beta")).toBe("b1");
   });
 
+  it("rewrites URL objects from another realm, such as an HTML artifact's iframe", async () => {
+    const original = vi.fn(async () => jsonResponse(200, {}));
+    const win = fakeWindow({ fetch: original });
+    installFetchShim(win);
+    // Not an instance of this realm's URL, like a URL created inside an iframe.
+    const foreignUrl = { href: "https://api.anthropic.com/v1/messages", toString: () => "https://api.anthropic.com/v1/messages" };
+    await win.fetch(foreignUrl, { method: "POST", body: "{}" });
+    expect(original.mock.calls[0][0]).toBe("/api/anthropic/v1/messages");
+  });
+
   it("passes other requests straight through", async () => {
     const original = vi.fn(async () => new Response("ok"));
     const win = fakeWindow({ fetch: original });

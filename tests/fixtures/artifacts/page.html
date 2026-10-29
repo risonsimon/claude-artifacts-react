@@ -16,6 +16,14 @@
       typeof window.fs,
       localStorage.getItem("html-fixture"),
     ].join(",");
+    fetch(new URL("https://api.anthropic.com/v1/messages"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 10, messages: [{ role: "user", content: "hi" }] }),
+    }).then((response) => {
+      document.getElementById("proxy").textContent = String(response.status);
+    });
   </script>
+  <p id="proxy"></p>
 </body>
 </html>

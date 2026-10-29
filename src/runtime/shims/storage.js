@@ -6,11 +6,14 @@ const PREFIX = "claude-artifacts";
 const MAX_KEY_LENGTH = 200;
 const MAX_VALUE_BYTES = 5 * 1024 * 1024;
 
-let namespace = "main";
+// "@" can't appear in an artifact file name, so the root artifact can't collide with one.
+export const ROOT_NAMESPACE = "@root";
+
+let namespace = ROOT_NAMESPACE;
 let warnedShared = false;
 
 export function setStorageNamespace(name) {
-  namespace = name || "main";
+  namespace = name || ROOT_NAMESPACE;
 }
 
 function memoryBackend() {

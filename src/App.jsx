@@ -48,6 +48,6 @@ export default function App() {
   }
 
   // Each artifact gets its own window.storage, like separate artifacts in Claude.
-  setStorageNamespace(artifact.name || "main");
+  setStorageNamespace(artifact.name);
   return <ArtifactView key={artifact.file} artifact={artifact} />;
 }
