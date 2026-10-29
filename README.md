@@ -189,6 +189,10 @@ git fetch upstream
 git merge upstream/main
 ```
 
+If Git says "refusing to merge unrelated histories", your repository started with a fresh history. Run `git merge upstream/main --allow-unrelated-histories` and, for every conflict, keep this repository's version of everything except your own artifact files.
+
+If you want easy updates, fork this repository first, then import your fork in Vercel or Cloudflare instead of using a deploy button.
+
 If Git reports a conflict, it is almost always in `src/ArtifactCode.jsx`, because you replaced the sample. Keep your version of that file. Artifacts in `src/artifacts/` do not conflict, because this repository keeps that folder empty.
 
 ## Troubleshooting
@@ -204,7 +208,7 @@ The message on the page shows the error. Common causes:
 
 - An icon does not exist in lucide-react 0.383.0, the version Claude uses. Icons added later by lucide are not available in Claude either. Pick a different icon.
 - The file has no `export default`. Add it before the main component.
-- three.js code uses `OrbitControls` or `CapsuleGeometry`. These are not part of r128, which Claude uses.
+- three.js code uses `THREE.OrbitControls` or `THREE.CapsuleGeometry`. Neither is part of the r128 build that Claude uses.
 
 **The page is blank.**
 Open the browser console (F12). Most often the artifact threw an error before it rendered, or an HTML artifact has a script error.
