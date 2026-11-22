@@ -8,6 +8,8 @@ Paste the artifact code into one file, push, and it is live on Vercel or Cloudfl
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/risonsimon/claude-artifacts-react)
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/risonsimon/claude-artifacts-react)
 
+> Made by [Rison Simon](https://risonsimon.com). Need a custom AI workflow or small app like this for your company, or want your team trained to ship with coding agents in-house? [Work with me →](https://risonsimon.com/work-with-me)
+
 ## Contents
 
 - [Quick start](#quick-start)
@@ -251,7 +253,3 @@ Use this project when you want:
 MIT. See [LICENSE](LICENSE).
 
 If something does not work, please [open an issue](https://github.com/risonsimon/claude-artifacts-react/issues).
-
----
-
-Made by [Rison Simon](https://risonsimon.com). Need a custom AI workflow or small app like this for your company, or want your team trained to ship with coding agents in-house? [Work with me →](https://risonsimon.com/work-with-me)
