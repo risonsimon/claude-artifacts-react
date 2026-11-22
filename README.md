@@ -251,3 +251,7 @@ Use this project when you want:
 MIT. See [LICENSE](LICENSE).
 
 If something does not work, please [open an issue](https://github.com/risonsimon/claude-artifacts-react/issues).
+
+---
+
+Made by [Rison Simon](https://risonsimon.com). Need a custom AI workflow or small app like this for your company, or want your team trained to ship with coding agents in-house? [Work with me →](https://risonsimon.com/work-with-me)
